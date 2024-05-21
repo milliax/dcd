@@ -1,12 +1,8 @@
 module gcd_top(input clk, input reset, input [15:0] A, input [15:0] B, input [15:0] C, input start, output [15:0] D, output valid);
-	wire [15:0] mid_C;
-    wire valid_A;
-    wire valid_B;
-
-    assign valid = valid_A && valid_B;
-
-	GCD GCD1(.clk(clk), .reset(reset), .start(start), .A(A), .B(B), .C(mid_C), .valid(valid_A));
-    GCD GCD2(.clk(clk), .reset(reset), .start(VALID), .A(mid_C), .B(C), .C(D), .valid(valid_B));
+	wire [15:0] CC;
+	wire VALID;
+	GCD GCD1(.clk(clk), .reset(reset), .start(start), .A(A), .B(B), .C(CC), .valid(VALID), .id(0));
+	GCD GCD2(.clk(clk), .reset(reset), .start(VALID), .A(CC), .B(C), .C(D), .valid(valid), .id(1));
 
 endmodule
 
@@ -17,6 +13,7 @@ module GCD(
     input [15:0] A,
     input [15:0] B,
     input test,
+    input id,
     output reg [15:0] C,
     output reg valid
 );
@@ -27,9 +24,10 @@ module GCD(
     reg minus_X;
     reg minus_Y;
 
-    always @(posedge clk or posedge reset or step) begin
+    always @(clk) begin
+        // $display("id :%d", id);
         if (reset) begin
-            $display("resetting");
+            // $display("resetting");
             X <= 16'b0;
             Y <= 16'b0;
             C <= 16'b0;
@@ -38,30 +36,31 @@ module GCD(
             minus_X <= 0;
             minus_Y <= 0;
             started <= 0;
-        end else if (start && !started && !valid) begin
-            $display("starting, start: %d, started: %d, valid: %d",start,started,valid);
-            // Initialize
+        end else if(start) begin
+            // reset the state
             X <= A;
             Y <= B;
+            // $display("id: %d, start: X = %d, Y = %d",id, X, Y);
             valid <= 0;
             started <= 1;
-            step <= !step;
-            $display("Input data: X = %d, Y = %d", X, Y);
-            $display("Initialized: X = %d, Y = %d", X, Y);
-        end else if(start && started && !valid) begin
-            $display("running: X = %d, Y = %d", X, Y);
+        end else if(valid) begin
+            // $display("id: %d, done: C = %d",id, C);
+            # 1
+            valid <= 0;
+        end else if(!start && started) begin
+            // $display("id: %d, running: X = %d, Y = %d",id, X, Y);
             
             if(minus_X == 1) begin
-                $display("minus X");
                 if(X >= Y)begin
+                // $display("minus X");
                     X <= X - Y;
                 end else begin
                     minus_X <= 0;
                 end
                 step <= !step;
             end else if(minus_Y == 1) begin
-                $display("minus Y");
                 if(Y >= X) begin
+                // $display("minus Y");
                     Y <= Y - X;
                 end else begin
                     minus_Y <= 0;
@@ -70,14 +69,20 @@ module GCD(
             end else begin
                 if(X == 0 || Y == 0) begin
                     if(X == 0) begin
-                        $display("X is zero");
+                        // $display("id: %d, X is zero",id);
                         C <= Y;
-                        valid <= 1;
                     end else begin
-                        $display("Y is zero");
+                        // $display("id: %d, Y is zero",id);
                         C <= X;
-                        valid <= 1;
                     end
+
+                    // $display("id: %d, done: C = %d",id, C);
+                    // $display("id: %d, done: X = %d, Y = %d",id, X, Y);
+
+                    started <= 0;
+                    valid <= 1;
+                    step <= !step;
+
                 end else if(X > Y) begin
                     minus_X <= 1;
                     step <= !step;

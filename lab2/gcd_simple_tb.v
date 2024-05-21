@@ -66,7 +66,7 @@ initial begin
 	C_input = 16'd4;
 
 	correct_data = 16'd4;
-    $display("started with value given, A: %d, B: %d, C: %d",A_input,B_input,C_input);
+
     start_input = 1;
 	@(posedge clk);
     #1; //Simulate flip-flop delay
