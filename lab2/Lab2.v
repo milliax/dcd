@@ -3,14 +3,6 @@ module gcd_top(input clk, input reset, input [15:0] A, input [15:0] B, input [15
     wire valid_A;
     wire valid_B;
 
-    // always @(A or B or C or mid_C) begin
-    //     $display("A = %d, B = %d, C = %d, mid_C = ", A, B, C,mid_C);
-    // end
-
-    // always @(clk) begin
-    //     $display("clock updated: %d",clk)
-    // end
-
     assign valid = valid_A && valid_B;
 
 	GCD GCD1(.clk(clk), .reset(reset), .start(start), .A(A), .B(B), .C(mid_C), .valid(valid_A));
